@@ -25,19 +25,21 @@ class Module:
         self.training = True
 
     def modules(self) -> Sequence[Module]:
-        "Return the direct child modules of this module."
+        """Return the direct child modules of this module."""
         m: Dict[str, Module] = self.__dict__["_modules"]
         return list(m.values())
 
     def train(self) -> None:
-        "Set the mode of this module and all descendent modules to `train`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        """Set the mode of this module and all descendent modules to `train`."""
+        self.training = True
+        for m in self.modules():
+            m.train()
 
     def eval(self) -> None:
-        "Set the mode of this module and all descendent modules to `eval`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        """Set the mode of this module and all descendent modules to `eval`."""
+        self.training = False
+        for m in self.modules():
+            m.eval()
 
     def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
         """
@@ -47,13 +49,32 @@ class Module:
         Returns:
             The name and `Parameter` of each ancestor parameter.
         """
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        return self.__named_parameters("")
+
+    def __named_parameters(self, prefix: str) -> Sequence[Tuple[str, Parameter]]:
+        """
+        Collect all the parameters of this module and its descendents with `prefix`.
+
+        Returns:
+            The name and `Parameter` of each ancestor parameter.
+        """
+        prefix = prefix + "." if len(prefix) > 0 else prefix
+
+        cur: Dict[str, Parameter] = self.__dict__["_parameters"]
+        ret = [(prefix + name, param) for name, param in cur.items()]
+
+        # find ancestor
+        for name, module in self.__dict__["_modules"].items():
+            ret += module.__named_parameters(prefix + name)
+        return ret
 
     def parameters(self) -> Sequence[Parameter]:
-        "Enumerate over all the parameters of this module and its descendents."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        """Enumerate over all the parameters of this module and its descendents."""
+        m: Dict[str, Parameter] = self.__dict__["_parameters"]
+        ret = list(m.values())
+        for _, module in self.__dict__["_modules"].items():
+            ret += module.parameters()
+        return ret
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """
