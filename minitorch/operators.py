@@ -28,7 +28,7 @@ def add(x: float, y: float) -> float:
 
 def neg(x: float) -> float:
     """$f(x) = -x$"""
-    return -x
+    return float(-x)  # force convert to float
 
 
 def lt(x: float, y: float) -> float:
