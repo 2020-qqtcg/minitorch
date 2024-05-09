@@ -63,10 +63,10 @@ class Scalar:
     name: str
 
     def __init__(
-        self,
-        v: float,
-        back: ScalarHistory = ScalarHistory(),
-        name: Optional[str] = None,
+            self,
+            v: float,
+            back: ScalarHistory = ScalarHistory(),
+            name: Optional[str] = None,
     ):
         global _var_count
         _var_count += 1
@@ -78,6 +78,9 @@ class Scalar:
             self.name = name
         else:
             self.name = str(self.unique_id)
+
+    def __hash__(self) -> int:
+        return self.unique_id
 
     def __repr__(self) -> str:
         return "Scalar(%f)" % self.data
@@ -163,12 +166,8 @@ class Scalar:
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        cur_d_outputs = h.last_fn.backward(h.ctx, float(d_output))
+        cur_d_outputs = h.last_fn.back(h.ctx, float(d_output))
         return [(v, d) for v, d in zip(h.inputs, cur_d_outputs) if not v.is_constant()]
-
-
-
-
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """
@@ -208,5 +207,5 @@ but was expecting derivative f'=%f from central difference."""
             1e-2,
             1e-2,
             err_msg=err_msg
-            % (str([x.data for x in scalars]), x.derivative, i, check.data),
+                    % (str([x.data for x in scalars]), x.derivative, i, check.data),
         )

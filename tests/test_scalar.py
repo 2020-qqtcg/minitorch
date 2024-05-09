@@ -108,6 +108,12 @@ def test_one_derivative(
     derivative_check(scalar_fn, t1)
 
 
+@pytest.mark.task1_4
+def test_one_derivative() -> None:
+    t1 = minitorch.Scalar(0.0)
+    scalar_fn = MathTestVariable.complex
+    derivative_check(scalar_fn, t1)
+
 @given(small_scalars, small_scalars)
 @pytest.mark.task1_4
 @pytest.mark.parametrize("fn", two_arg)

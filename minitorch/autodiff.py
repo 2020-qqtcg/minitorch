@@ -67,8 +67,31 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+
+    # we asume there has no circle, simplifying the sort
+
+    topological_set = set()
+    return topological_sort_dfs(variable, topological_set)
+
+
+def topological_sort_dfs(variable: Variable, topological_set: set) -> Iterable[Variable]:
+    """
+    Computes the topological order of the computation graph.
+    Args:
+        variable: a variable in topological order
+        topological_set: record node viewed
+
+    Returns:
+        Non-constant Variables in topological order starting from the node.
+    """
+    topological_list = []
+    for v in variable.parents:
+        if v.unique_id not in topological_set:
+            topological_set.add(v.unique_id)
+            if not v.is_constant():
+                topological_list += topological_sort_dfs(v, topological_set)
+    topological_list.append(variable)
+    return topological_list[::-1]
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -82,8 +105,28 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+
+    # get an ordered queue and generate a dict ( scalar : detivattive)
+    variables = topological_sort(variable)
+    scalar_dict = {key: None for key in variables}
+    scalar_dict[variable] = deriv
+
+    # backpropagate
+    for v in variables:
+        if v.is_leaf():
+            continue
+        if scalar_dict[v] is None:
+            print(1)
+        for cr in v.chain_rule(scalar_dict[v]):
+            if scalar_dict[cr[0]] is not None:
+                scalar_dict[cr[0]] += cr[1]
+            else:
+                scalar_dict[cr[0]] = cr[1]
+
+    # accumulate derivative for leaf
+    for v in variables:
+        if v.is_leaf():
+            v.accumulate_derivative(scalar_dict[v])
 
 
 @dataclass

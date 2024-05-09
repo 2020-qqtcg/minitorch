@@ -4,6 +4,8 @@ import pytest
 
 import minitorch
 from minitorch import Context, ScalarFunction, ScalarHistory
+from minitorch import autodiff
+
 
 # ## Task 1.3 - Tests for the autodifferentiation machinery.
 
@@ -64,7 +66,7 @@ def test_chain_rule2() -> None:
 
 @pytest.mark.task1_3
 def test_chain_rule3() -> None:
-    "Check that constrants are ignored and variables get derivatives."
+    """Check that constrants are ignored and variables get derivatives."""
     constant = 10
     var = minitorch.Scalar(5)
 
@@ -99,6 +101,15 @@ def test_chain_rule4() -> None:
 # ## Task 1.4 - Run some simple backprop tests
 
 # Main tests are in test_scalar.py
+
+@pytest.mark.task_sort
+def test_topological_sort1() -> None:
+    b = minitorch.Scalar(2.0)
+    c = minitorch.Scalar(3.0)
+    back1 = minitorch.scalar.ScalarHistory(inputs=[b, c])
+    a = minitorch.Scalar(1.0, back1)
+    res = autodiff.topological_sort(a)
+    print(res)
 
 
 @pytest.mark.task1_4
