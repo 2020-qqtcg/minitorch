@@ -165,8 +165,7 @@ class Scalar:
         assert h is not None
         assert h.last_fn is not None
         assert h.ctx is not None
-
-        cur_d_outputs = h.last_fn.back(h.ctx, float(d_output))
+        cur_d_outputs = h.last_fn.chain_rule(h.ctx, float(d_output))
         return [(v, d) for v, d in zip(h.inputs, cur_d_outputs) if not v.is_constant()]
 
     def backward(self, d_output: Optional[float] = None) -> None:

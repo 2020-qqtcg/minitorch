@@ -68,7 +68,7 @@ class ScalarFunction:
         return minitorch.scalar.Scalar(c, back)
 
     @classmethod
-    def back(cls, ctx: Context, d_out: float) -> Tuple[float, ...]:
+    def chain_rule(cls, ctx: Context, d_out: float) -> Tuple[float, ...]:
         return cls._backward(ctx, d_out)
 
 

@@ -69,28 +69,20 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     """
 
     # we asume there has no circle, simplifying the sort
-
-    topological_set = set()
-    return topological_sort_dfs(variable, topological_set)
-
-
-def topological_sort_dfs(variable: Variable, topological_set: set) -> Iterable[Variable]:
-    """
-    Computes the topological order of the computation graph.
-    Args:
-        variable: a variable in topological order
-        topological_set: record node viewed
-
-    Returns:
-        Non-constant Variables in topological order starting from the node.
-    """
     topological_list = []
-    for v in variable.parents:
-        if v.unique_id not in topological_set:
-            topological_set.add(v.unique_id)
-            if not v.is_constant():
-                topological_list += topological_sort_dfs(v, topological_set)
-    topological_list.append(variable)
+    topological_set = set()
+
+    def dfs_helper(v: Variable):
+        if v.unique_id in topological_set or v.is_constant():
+            return
+
+        for parent in v.parents:
+            dfs_helper(parent)
+
+        topological_set.add(v.unique_id)
+        topological_list.append(v)
+
+    dfs_helper(variable)
     return topological_list[::-1]
 
 
@@ -108,25 +100,24 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     # get an ordered queue and generate a dict ( scalar : detivattive)
     variables = topological_sort(variable)
-    scalar_dict = {key: None for key in variables}
-    scalar_dict[variable] = deriv
+    unique_ids = [v.unique_id for v in variables]
+    scalar_dict = {key: None for key in unique_ids}
+    scalar_dict[variable.unique_id] = deriv
 
     # backpropagate
     for v in variables:
         if v.is_leaf():
             continue
-        if scalar_dict[v] is None:
-            print(1)
-        for cr in v.chain_rule(scalar_dict[v]):
-            if scalar_dict[cr[0]] is not None:
-                scalar_dict[cr[0]] += cr[1]
+        for key, item in v.chain_rule(scalar_dict[v.unique_id]):
+            if scalar_dict[key.unique_id] is not None:
+                scalar_dict[key.unique_id] += item
             else:
-                scalar_dict[cr[0]] = cr[1]
+                scalar_dict[key.unique_id] = item
 
     # accumulate derivative for leaf
     for v in variables:
         if v.is_leaf():
-            v.accumulate_derivative(scalar_dict[v])
+            v.accumulate_derivative(scalar_dict[v.unique_id])
 
 
 @dataclass
