@@ -15,7 +15,7 @@ MAX_DIMS = 32
 
 
 class IndexingError(RuntimeError):
-    "Exception raised for indexing errors."
+    """Exception raised for indexing errors."""
     pass
 
 
@@ -43,8 +43,10 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
     """
 
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+    pos = 0
+    for i, s in zip(index, strides):
+        pos += i * s
+    return pos
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -60,12 +62,14 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+
+    for i in range(len(shape) - 1, -1, -1):
+        out_index[i] = ordinal % shape[i]
+        ordinal //= shape[i]
 
 
 def broadcast_index(
-    big_index: Index, big_shape: Shape, shape: Shape, out_index: OutIndex
+        big_index: Index, big_shape: Shape, shape: Shape, out_index: OutIndex
 ) -> None:
     """
     Convert a `big_index` into `big_shape` to a smaller `out_index`
@@ -83,8 +87,7 @@ def broadcast_index(
     Returns:
         None
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError('Need to implement for Task 2.2')
+    raise NotImplementedError("Not implemented in this assignment2.2")
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -101,9 +104,35 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError('Need to implement for Task 2.2')
+    shape1 = list(shape1)
+    shape2 = list(shape2)
+    # Each tensor must have at least one dimension - no empty tensors.
+    if len(shape1) == 0 or len(shape2) == 0:
+        raise IndexingError
 
+    # Comparing the dimension sizes of the two tensors, going from last to first:
+    #   - Each dimension must be equal, or
+    #   - One of the dimensions must be of size 1, or
+    #   - The dimension does not exist in one of the tensors
+    max_len = max(len(shape1), len(shape2))
+    min_len = min(len(shape1), len(shape2))
+    ret : UserShape = [None] * max_len
+    for i in range(1, min_len + 1):
+        if shape1[len(shape1) - i] == shape2[len(shape2) - i]:
+            ret[max_len - i] = shape1[len(shape1) - i]
+        elif shape1[len(shape1) - i] == 0 or shape2[len(shape2) - i] == 0:
+            ret[max_len - i] = max(shape1[len(shape1) - i], shape2[len(shape2) - i])
+        elif shape1[len(shape1) - i] == 1 or shape2[len(shape2) - i] == 1:
+            ret[max_len - i] = max(shape1[len(shape1) - i], shape2[len(shape2) - i])
+        else:
+            raise IndexingError
+
+    for i in range(min_len + 1, max_len + 1):
+        if len(shape1) >= len(shape2):
+            ret[max_len - i] = shape1[len(shape1) - i]
+        else:
+            ret[max_len - i] = shape2[len(shape2) - i]
+    return tuple(ret)
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
     layout = [1]
@@ -123,10 +152,10 @@ class TensorData:
     dims: int
 
     def __init__(
-        self,
-        storage: Union[Sequence[float], Storage],
-        shape: UserShape,
-        strides: Optional[UserStrides] = None,
+            self,
+            storage: Union[Sequence[float], Storage],
+            shape: UserShape,
+            strides: Optional[UserStrides] = None,
     ):
         if isinstance(storage, np.ndarray):
             self._storage = storage
@@ -227,8 +256,12 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        # TODO: Implement for Task 2.1.
-        raise NotImplementedError('Need to implement for Task 2.1')
+        new_shape = tuple([self.shape[i] for i in order])
+        new_strides = tuple([self.strides[i] for i in order])
+        return TensorData(
+            storage=self._storage,
+            shape=new_shape,
+            strides=new_strides)
 
     def to_string(self) -> str:
         s = ""

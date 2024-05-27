@@ -264,8 +264,9 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        # Simple version
+        for storage in in_storage:
+            out = np.append(out, fn(storage))
 
     return _map
 
@@ -309,8 +310,8 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        for a, b in zip(a_storage, b_storage):
+            out = np.append(out, fn(a, b))
 
     return _zip
 

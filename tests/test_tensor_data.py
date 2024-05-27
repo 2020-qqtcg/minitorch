@@ -62,6 +62,7 @@ def test_enumeration(tensor_data: TensorData) -> None:
 def test_index(tensor_data: TensorData) -> None:
     "Test enumeration of tensor_data."
     # Check that all indices are within the size.
+    print(str(tensor_data.shape) + " & " + str(tensor_data.strides))
     for ind in tensor_data.indices():
         pos = tensor_data.index(ind)
         assert pos >= 0 and pos < tensor_data.size
