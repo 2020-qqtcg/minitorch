@@ -87,7 +87,12 @@ def broadcast_index(
     Returns:
         None
     """
-    raise NotImplementedError("Not implemented in this assignment2.2")
+    for i in range(1, shape.size + 1):
+        if big_shape[len(big_shape) - i] > shape[shape.size - i]:
+            # be broadcasted
+            out_index[shape.size - i] = 0
+        else:
+            out_index[shape.size - i] = big_index[len(big_index) - i]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -132,6 +137,7 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
             ret[max_len - i] = shape1[len(shape1) - i]
         else:
             ret[max_len - i] = shape2[len(shape2) - i]
+
     return tuple(ret)
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
