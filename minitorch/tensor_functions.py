@@ -104,8 +104,10 @@ class Mul(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError('Need to implement for Task 2.4')
+        (a, b) = ctx.saved_values
+        a_grad = grad_output.f.mul_zip(b, grad_output)
+        b_grad = grad_output.f.mul_zip(a, grad_output)
+        return a_grad, b_grad
 
 
 class Sigmoid(Function):
@@ -116,8 +118,8 @@ class Sigmoid(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError('Need to implement for Task 2.4')
+        (t1,) = ctx.saved_values
+        return grad_output.f.sigmoid_back_zip(t1, grad_output)
 
 
 class ReLU(Function):
@@ -128,8 +130,8 @@ class ReLU(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError('Need to implement for Task 2.4')
+        (t1,) = ctx.saved_values
+        return grad_output.f.relu_back_zip(t1, grad_output)
 
 
 class Log(Function):
@@ -140,8 +142,8 @@ class Log(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError('Need to implement for Task 2.4')
+        (t1,) = ctx.saved_values
+        return grad_output.f.log_back_zip(t1, grad_output)
 
 
 class Exp(Function):
@@ -152,8 +154,9 @@ class Exp(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError('Need to implement for Task 2.4')
+        (t1,) = ctx.saved_values
+        v = grad_output.f.exp_map(t1)
+        return grad_output.f.mul_zip(v, grad_output)
 
 
 class Sum(Function):
@@ -185,8 +188,7 @@ class LT(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError('Need to implement for Task 2.4')
+        return grad_output.zeros(grad_output.shape), grad_output.zeros(grad_output.shape)
 
 
 class EQ(Function):
@@ -197,8 +199,7 @@ class EQ(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError('Need to implement for Task 2.4')
+        return grad_output.zeros(grad_output.shape), grad_output.zeros(grad_output.shape)
 
 
 class IsClose(Function):
@@ -211,13 +212,19 @@ class IsClose(Function):
 class Permute(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, order: Tensor) -> Tensor:
-        ctx.save_for_backward(a, order)
-        return a.permute(order)
+        a_storage, a_shape, a_strides = a.tuple()
+        ctx.save_for_backward(a_shape, a_strides)
+        order_list = order.to_numpy().astype(np.int32).tolist()
+        return a._new(a._tensor.permute(*order_list))
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError('Need to implement for Task 2.4')
+        (shape, strides) = ctx.saved_values
+        return (
+            minitorch.Tensor.make(
+                grad_output._tensor._storage, tuple(shape), tuple(strides), backend=grad_output.backend),
+            0.0
+        )
 
 
 class View(Function):
@@ -290,9 +297,9 @@ def zeros(shape: UserShape, backend: TensorBackend = SimpleBackend) -> Tensor:
 
 
 def rand(
-    shape: UserShape,
-    backend: TensorBackend = SimpleBackend,
-    requires_grad: bool = False,
+        shape: UserShape,
+        backend: TensorBackend = SimpleBackend,
+        requires_grad: bool = False,
 ) -> Tensor:
     """
     Produce a random tensor of size `shape`.
@@ -312,10 +319,10 @@ def rand(
 
 
 def _tensor(
-    ls: Any,
-    shape: UserShape,
-    backend: TensorBackend = SimpleBackend,
-    requires_grad: bool = False,
+        ls: Any,
+        shape: UserShape,
+        backend: TensorBackend = SimpleBackend,
+        requires_grad: bool = False,
 ) -> Tensor:
     """
     Produce a tensor with data ls and shape `shape`.
@@ -335,7 +342,7 @@ def _tensor(
 
 
 def tensor(
-    ls: Any, backend: TensorBackend = SimpleBackend, requires_grad: bool = False
+        ls: Any, backend: TensorBackend = SimpleBackend, requires_grad: bool = False
 ) -> Tensor:
     """
     Produce a tensor with data and shape from ls
@@ -370,7 +377,7 @@ def tensor(
 
 
 def grad_central_difference(
-    f: Any, *vals: Tensor, arg: int = 0, epsilon: float = 1e-6, ind: UserIndex
+        f: Any, *vals: Tensor, arg: int = 0, epsilon: float = 1e-6, ind: UserIndex
 ) -> float:
     x = vals[arg]
     up = zeros(x.shape)

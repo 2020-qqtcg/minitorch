@@ -101,23 +101,25 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
     # get an ordered queue and generate a dict ( scalar : detivattive)
     variables = topological_sort(variable)
     unique_ids = [v.unique_id for v in variables]
-    scalar_dict = {key: None for key in unique_ids}
-    scalar_dict[variable.unique_id] = deriv
+    var_dict = {key: None for key in unique_ids}
+    var_dict[variable.unique_id] = deriv
 
     # backpropagate
     for v in variables:
         if v.is_leaf():
             continue
-        for key, item in v.chain_rule(scalar_dict[v.unique_id]):
-            if scalar_dict[key.unique_id] is not None:
-                scalar_dict[key.unique_id] += item
+        for key, item in v.chain_rule(var_dict[v.unique_id]):
+            if key.is_constant():
+                continue
+            if var_dict[key.unique_id] is not None:
+                var_dict[key.unique_id] += item
             else:
-                scalar_dict[key.unique_id] = item
+                var_dict[key.unique_id] = item
 
     # accumulate derivative for leaf
     for v in variables:
         if v.is_leaf():
-            v.accumulate_derivative(scalar_dict[v.unique_id])
+            v.accumulate_derivative(var_dict[v.unique_id])
 
 
 @dataclass

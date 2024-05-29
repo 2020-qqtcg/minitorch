@@ -40,7 +40,7 @@ class TensorOps:
 
     @staticmethod
     def reduce(
-        fn: Callable[[float, float], float], start: float = 0.0
+            fn: Callable[[float, float], float], start: float = 0.0
     ) -> Callable[[Tensor, int], Tensor]:
         pass
 
@@ -85,6 +85,7 @@ class TensorBackend:
         self.relu_back_zip = ops.zip(operators.relu_back)
         self.log_back_zip = ops.zip(operators.log_back)
         self.inv_back_zip = ops.zip(operators.inv_back)
+        self.sigmoid_back_zip = ops.zip(operators.sigmoid_back)
 
         # Reduce
         self.add_reduce = ops.reduce(operators.add, 0.0)
@@ -137,7 +138,7 @@ class SimpleOps(TensorOps):
 
     @staticmethod
     def zip(
-        fn: Callable[[float, float], float]
+            fn: Callable[[float, float], float]
     ) -> Callable[["Tensor", "Tensor"], "Tensor"]:
         """
         Higher-order tensor zip function ::
@@ -182,7 +183,7 @@ class SimpleOps(TensorOps):
 
     @staticmethod
     def reduce(
-        fn: Callable[[float, float], float], start: float = 0.0
+            fn: Callable[[float, float], float], start: float = 0.0
     ) -> Callable[["Tensor", int], "Tensor"]:
         """
         Higher-order tensor reduce function. ::
@@ -232,7 +233,7 @@ class SimpleOps(TensorOps):
 
 
 def tensor_map(
-    fn: Callable[[float], float]
+        fn: Callable[[float], float]
 ) -> Callable[[Storage, Shape, Strides, Storage, Shape, Strides], None]:
     """
     Low-level implementation of tensor map between
@@ -258,18 +259,18 @@ def tensor_map(
     """
 
     def _map(
-        out: Storage,
-        out_shape: Shape,
-        out_strides: Strides,
-        in_storage: Storage,
-        in_shape: Shape,
-        in_strides: Strides,
+            out: Storage,
+            out_shape: Shape,
+            out_strides: Strides,
+            in_storage: Storage,
+            in_shape: Shape,
+            in_strides: Strides,
     ) -> None:
-        out_index = [None] * out_shape.size
-        in_index = [None] * in_shape.size
+        out_index: OutIndex = np.zeros(out_shape.size, dtype=np.int32)
+        in_index: OutIndex = np.zeros(in_shape.size, dtype=np.int32)
         for i in range(out.size):
             to_index(i, out_shape, out_index)
-            to_index(i, out_shape, in_index)
+            to_index(i, in_shape, in_index)
             out_pos = index_to_position(out_index, out_strides)
             in_pos = index_to_position(in_index, in_strides)
             out[out_pos] = fn(in_storage[in_pos])
@@ -278,7 +279,7 @@ def tensor_map(
 
 
 def tensor_zip(
-    fn: Callable[[float, float], float]
+        fn: Callable[[float, float], float]
 ) -> Callable[
     [Storage, Shape, Strides, Storage, Shape, Strides, Storage, Shape, Strides], None
 ]:
@@ -306,19 +307,19 @@ def tensor_zip(
     """
 
     def _zip(
-        out: Storage,
-        out_shape: Shape,
-        out_strides: Strides,
-        a_storage: Storage,
-        a_shape: Shape,
-        a_strides: Strides,
-        b_storage: Storage,
-        b_shape: Shape,
-        b_strides: Strides,
+            out: Storage,
+            out_shape: Shape,
+            out_strides: Strides,
+            a_storage: Storage,
+            a_shape: Shape,
+            a_strides: Strides,
+            b_storage: Storage,
+            b_shape: Shape,
+            b_strides: Strides,
     ) -> None:
-        out_index = [None] * out_shape.size
-        a_index = [None] * a_shape.size
-        b_index = [None] * b_shape.size
+        out_index: OutIndex = np.zeros(out_shape.size, dtype=np.int32)
+        a_index: OutIndex = np.zeros(a_shape.size, dtype=np.int32)
+        b_index: OutIndex = np.zeros(b_shape.size, dtype=np.int32)
 
         for i in range(out.size):
             to_index(i, out_shape, out_index)
@@ -332,7 +333,7 @@ def tensor_zip(
 
 
 def tensor_reduce(
-    fn: Callable[[float, float], float]
+        fn: Callable[[float, float], float]
 ) -> Callable[[Storage, Shape, Strides, Storage, Shape, Strides, int], None]:
     """
     Low-level implementation of tensor reduce.
@@ -348,19 +349,19 @@ def tensor_reduce(
     """
 
     def _reduce(
-        out: Storage,
-        out_shape: Shape,
-        out_strides: Strides,
-        a_storage: Storage,
-        a_shape: Shape,
-        a_strides: Strides,
-        reduce_dim: int,
+            out: Storage,
+            out_shape: Shape,
+            out_strides: Strides,
+            a_storage: Storage,
+            a_shape: Shape,
+            a_strides: Strides,
+            reduce_dim: int,
     ) -> None:
         dim_range = a_shape[reduce_dim]
         # enumerating over positions in the final tensor,
         # and then applying the reduction shape to get the indices over the original tensor
         for i in range(out.size):
-            out_index : OutIndex = [None] * out_shape.size
+            out_index: OutIndex = np.zeros(out_shape.size, dtype=np.int32)
             to_index(i, out_shape, out_index)
 
             dim_list = []

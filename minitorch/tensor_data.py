@@ -121,7 +121,7 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     #   - The dimension does not exist in one of the tensors
     max_len = max(len(shape1), len(shape2))
     min_len = min(len(shape1), len(shape2))
-    ret : UserShape = [None] * max_len
+    ret: UserShape = np.zeros(max_len, dtype=np.int32)
     for i in range(1, min_len + 1):
         if shape1[len(shape1) - i] == shape2[len(shape2) - i]:
             ret[max_len - i] = shape1[len(shape1) - i]
@@ -139,6 +139,7 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
             ret[max_len - i] = shape2[len(shape2) - i]
 
     return tuple(ret)
+
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
     layout = [1]
