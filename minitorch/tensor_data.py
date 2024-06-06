@@ -62,10 +62,10 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-
+    ordinal = ordinal + 0
     for i in range(len(shape) - 1, -1, -1):
         out_index[i] = ordinal % shape[i]
-        ordinal //= shape[i]
+        ordinal = ordinal // shape[i]
 
 
 def broadcast_index(

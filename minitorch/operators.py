@@ -4,6 +4,7 @@ Collection of the core mathematical operators used throughout the code base.
 
 import math
 from typing import Callable, Iterable
+from numba import njit
 
 
 # ## Task 0.1
@@ -72,7 +73,7 @@ def relu(x: float) -> float:
 
     (See https://en.wikipedia.org/wiki/Rectifier_(neural_networks) .)
     """
-    return max(x, 0.0)
+    return x if x > 0 else 0
 
 
 EPS = 1e-6
